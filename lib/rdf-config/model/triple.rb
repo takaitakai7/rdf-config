@@ -222,15 +222,15 @@ class RDFConfig
       end
 
       def data_type_by_string_value(value)
-        if /\^\^(\w+)\:(.+)\z/ =~ value
-          if $1 == 'xsd'
-            case $2
-            when 'string'
-              'String'
+        if /\^\^(?<prefix>\w+)\:(?<local_part>.+)\z/ =~ value
+          if prefix == 'xsd'
+            case local_part
             when 'integer'
               'Int'
+            when /\A[a-z0-9]+\z/
+              local_part.capitalize
             else
-              $2.capitalize
+              local_part.dup
             end
           else
             "#{$1}:#{$2}"

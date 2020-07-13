@@ -29,11 +29,13 @@ class RDFConfig
 
       def initialize(config)
         @model = Model.new(config)
+        @prefix = config.prefix
+
         generate_svg_element
         add_to_svg(style_element)
 
         @current_pos = Position.new(START_X, START_Y)
-        @subject_queue = []
+        @subjects = []
         @generated_subjects = []
         @element_pos = {}
       end
@@ -67,7 +69,9 @@ class RDFConfig
         unless @element_pos.key?(subject.object_id)
           @element_pos[subject.object_id] = []
         end
-        @subject_queue.push(subject)
+
+        move_to_subject
+        @subjects.push(subject)
         add_element_position
 
         generator = SubjectGenerator.new(subject, @current_pos)
@@ -76,21 +80,44 @@ class RDFConfig
         subject.predicates.each do |predicate|
           predicate.objects.each do |object|
             generate_predicate_object(predicate, object)
-            move_to_next_object
           end
         end
 
         add_subject(subject.name) unless subject.blank_node?
-        @subject_queue.pop
+        @subjects.pop
       end
 
       def generate_predicate_object(predicate, object)
-        move_to_predicate
-        generate_predicate(predicate)
+        value = predicate.rdf_type? ? object.name : object.value
 
-        # move object position after generating predicate
-        @current_pos.x += PREDICATE_AREA_WIDTH
-        generate_object(predicate, object)
+        case value
+        when Array
+          value.each do |object_value|
+            subject = @model.find_subject(object_value)
+            if subject
+              generate_predicate_object(predicate, subject)
+            else
+              if predicate.rdf_type?
+                name = object_value
+                value = nil
+              else
+                name = object.name
+                value = object_value
+              end
+              generate_predicate_object(predicate,
+                                        Model::Object.instance({ name => value }, @prefix))
+            end
+          end
+        else
+          move_to_predicate
+          generate_predicate(predicate)
+
+          # move object position after generating predicate
+          @current_pos.x += PREDICATE_AREA_WIDTH
+          generate_object(predicate, object)
+        end
+
+        move_to_next_object
       end
 
       def generate_predicate(predicate)
@@ -142,12 +169,16 @@ class RDFConfig
                           @current_pos.x + PREDICATE_AREA_WIDTH, y2)
       end
 
+      def move_to_subject
+        @current_pos.x = START_X if @subjects.empty?
+      end
+
       def move_to_next_object
         @current_pos.y = @element_pos.values.flatten.map(&:y).max + RECT_HEIGHT + MARGIN_RECT
       end
 
       def current_subject
-        @subject_queue.last
+        @subjects.last
       end
 
       def num_objects
