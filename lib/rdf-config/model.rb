@@ -1,4 +1,5 @@
 require 'rdf-config/model/triple'
+require 'rdf-config/model/validator'
 
 class RDFConfig
   class Model
@@ -11,6 +12,7 @@ class RDFConfig
       @subjects = []
 
       generate_triples
+      validate
     end
 
     def each
@@ -74,12 +76,31 @@ class RDFConfig
       @bnode_subjects.select { |s| s.objects.map(&:name) == object_name }.first
     end
 
+    def object_names
+      names = []
+
+      @triples.each do |triple|
+        next if triple.predicate.rdf_type?
+
+        names << triple.object_name
+      end
+
+      names
+    end
+
     def [](idx)
       @triples[idx]
     end
 
     def size
       @size ||= @triples.size
+    end
+
+    def validate
+      validator = Validator.new(self, @config)
+      validator.validate
+
+      raise Config::InvalidConfig, validator.errors.join("\n") if validator.error?
     end
 
     private

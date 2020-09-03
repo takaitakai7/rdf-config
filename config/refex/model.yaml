@@ -1,15 +1,15 @@
-- RefExEntry <http://purl.jp/bio/01/refex/RFX0016539731>:
+- RefExEntry <http://refex.dbcls.jp/entry/RFX0000000216>:
     - a: refexo:RefExEntry
     - refexo:expValue:
-        - ex_value: Ex value
+        - ex_value: 3.4545367627924
     - dct:identifier:
         - refex_id: RFX0016539731
-    - rdfs:seeAlso:
+    - rdfs:seeAlso+:
         - see_also: <http://identifiers.org/affy.probeset/224348_s_at>
     - refexo:refexSample:
         - sample: RefExSample
 
-- RefExSample <http://refex.dbcls.jp/sample/RES00000100>:
+- RefExSample <http://refex.dbcls.jp/sample/RES00000020>:
     - a: refexo:RefExSample
     - dct:identifier:
         - sample_id: RES00000100

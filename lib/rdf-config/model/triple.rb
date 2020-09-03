@@ -80,9 +80,7 @@ class RDFConfig
       end
 
       def types
-        rdf_type_predicates = @predicates.select { |predicate| predicate.rdf_type? }
-        raise SubjectClassNotFound, "Subject: #{@name}: rdf:type not found." if rdf_type_predicates.empty?
-
+        rdf_type_predicates = @predicates.select(&:rdf_type?)
         rdf_type_predicates.map { |predicate| predicate.objects.map(&:name) }.flatten
       end
 
@@ -140,7 +138,9 @@ class RDFConfig
         as_object(subject_name).value
       end
 
-      class SubjectClassNotFound < StandardError; end
+      def used_as_object?
+        !@as_object.empty?
+      end
     end
 
     class Predicate
@@ -163,6 +163,14 @@ class RDFConfig
 
       def rdf_type?
         %w[a rdf:type].include?(@uri)
+      end
+
+      def required?
+        @cardinality.nil? || !@cardinality.min.nil? && @cardinality.min > 0
+      end
+
+      def plural?
+        !@cardinality.nil? && (@cardinality.max.nil? || @cardinality.max > 1)
       end
 
       private
@@ -222,15 +230,15 @@ class RDFConfig
       end
 
       def data_type_by_string_value(value)
-        if /\^\^(\w+)\:(.+)\z/ =~ value
-          if $1 == 'xsd'
-            case $2
-            when 'string'
-              'String'
+        if /\^\^(?<prefix>\w+)\:(?<local_part>.+)\z/ =~ value
+          if prefix == 'xsd'
+            case local_part
             when 'integer'
               'Int'
+            when /\A[a-z0-9]+\z/
+              local_part.capitalize
             else
-              $2.capitalize
+              local_part.dup
             end
           else
             "#{$1}:#{$2}"

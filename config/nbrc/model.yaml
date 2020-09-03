@@ -50,15 +50,15 @@
       - mccv:MCCV_000072:
         - []:
           - rdf:type: mccv:MCCV_000007  # Habitat
-          - sio:SIO_000008:
+          - sio:SIO_000008*:
             - attribute: meo:MEO_0000007
-          - mccv:MCCV_000030:
+          - mccv:MCCV_000030*:
             - habitat: Soil, USA
         - []:
           - rdf:type: mccv:MCCV_000008  # Location
-          - rdfs:label:
+          - rdfs:label*:
             - location: USA
-          - sio:SIO_000008:
+          - sio:SIO_000008*:
             - gazetteer: obo:GAZ_00600942
   - dct:references:
     - reference: pubmed:14657141

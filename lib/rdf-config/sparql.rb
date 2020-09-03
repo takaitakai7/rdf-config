@@ -15,7 +15,11 @@ class RDFConfig
       @config = config
       @opts = opts
 
-      raise SPARQLConfigNotFound, "No SPARQL config found: sparql query name '#{name}'" unless @config.sparql.key?(name)
+      @variables = opts[:variables] if opts.key?(:variables)
+      @parameters = opts[:parameters] if opts.key?(:parameters)
+      if !opts.key?(:check_query_name) || opts[:check_query_name] == true
+        raise SPARQLConfigNotFound, "No SPARQL config found: sparql query name '#{name}'" unless @config.sparql.key?(name)
+      end
     end
 
     def generate
